@@ -1,0 +1,76 @@
+# ──────────────────────────────────────────────────────────────────────────
+# mymind (Karakeep fork) — KryptoVault deployment
+# ──────────────────────────────────────────────────────────────────────────
+# Designed for the UGREEN NASync DXP4800 Pro at 192.168.8.233 with the
+# NVMe Docker pool. Build is local from the fork; no registry needed.
+#
+# Quick start (run from this directory on the NAS):
+#   1.  cp .env.example .env  &&  vim .env       # fill in secrets
+#   2.  docker compose build                     # builds the fork image
+#   3.  docker compose up -d                     # start
+#   4.  open http://192.168.8.233:3000           # create your account
+#
+# All paths assume `/mnt/dockerdata/mymind` is the persistence root (NVMe).
+# Adjust the volume bindings below if your Docker data pool is elsewhere.
+# ──────────────────────────────────────────────────────────────────────────
+
+services:
+  web:
+    container_name: mymind-web
+    build:
+      # Build from the repo root so the Dockerfile can copy the workspace.
+      context: ../..
+      dockerfile: docker/Dockerfile
+    image: mymind-fork:local
+    restart: unless-stopped
+    ports:
+      # Bind only on the LAN/Tailscale interfaces, not 0.0.0.0, if you want
+      # to be extra strict. Leaving it open here so the iPhone app and the
+      # Chrome extension can reach it from your tailnet.
+      - "3000:3000"
+    volumes:
+      # Bookmark assets, SQLite DB, archives — all under this single dir.
+      - /mnt/dockerdata/mymind/data:/data
+    env_file:
+      - .env
+    environment:
+      # Internal service URLs (Docker network DNS).
+      MEILI_ADDR: http://meilisearch:7700
+      BROWSER_WEB_URL: http://chrome:9222
+      DATA_DIR: /data
+    depends_on:
+      - meilisearch
+      - chrome
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+
+  chrome:
+    container_name: mymind-chrome
+    # Used for crawling pages, taking screenshots, archiving with monolith.
+    image: gcr.io/zenika-hub/alpine-chrome:124
+    restart: unless-stopped
+    command:
+      - --no-sandbox
+      - --disable-gpu
+      - --disable-dev-shm-usage
+      - --remote-debugging-address=0.0.0.0
+      - --remote-debugging-port=9222
+      - --hide-scrollbars
+    # Headless Chrome leaks memory occasionally; let it self-recover.
+    mem_limit: 2g
+
+  meilisearch:
+    container_name: mymind-meili
+    image: getmeili/meilisearch:v1.41.0
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MEILI_NO_ANALYTICS: "true"
+      MEILI_ENV: production
+    volumes:
+      - /mnt/dockerdata/mymind/meili:/meili_data
