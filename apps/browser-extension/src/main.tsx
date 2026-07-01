@@ -4,8 +4,6 @@ import "./index.css";
 
 import { HashRouter, Route, Routes } from "react-router-dom";
 
-import BookmarkDeletedPage from "./BookmarkDeletedPage.tsx";
-import BookmarkSavedPage from "./BookmarkSavedPage.tsx";
 import CustomHeadersPage from "./CustomHeadersPage.tsx";
 import Layout from "./Layout.tsx";
 import NotConfiguredPage from "./NotConfiguredPage.tsx";
@@ -22,14 +20,6 @@ function App() {
           <Routes>
             <Route element={<Layout />}>
               <Route path="/" element={<SavePage />} />
-              <Route
-                path="/bookmark/:bookmarkId"
-                element={<BookmarkSavedPage />}
-              />
-              <Route
-                path="/bookmarkdeleted"
-                element={<BookmarkDeletedPage />}
-              />
             </Route>
             <Route path="/notconfigured" element={<NotConfiguredPage />} />
             <Route path="/options" element={<OptionsPage />} />

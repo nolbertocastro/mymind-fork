@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Navigate } from "react-router-dom";
 
 import {
   BookmarkTypes,
@@ -9,9 +8,7 @@ import {
 } from "@karakeep/shared/types/bookmarks";
 
 import { NEW_BOOKMARK_REQUEST_KEY_NAME } from "./background/protocol";
-import { Button } from "./components/ui/button";
-import { Input } from "./components/ui/input";
-import { Textarea } from "./components/ui/textarea";
+import SavedToast from "./SavedToast";
 import Spinner from "./Spinner";
 import { hasHostPermission } from "./utils/permissions";
 import usePluginSettings from "./utils/settings";
@@ -23,6 +20,17 @@ import { useTRPC } from "./utils/trpc";
 import { MessageType } from "./utils/type";
 import { isHttpUrl } from "./utils/url";
 
+/**
+ * Krystal save flow — mymind-style.
+ *
+ * The popup opens, fires createBookmark against the pending bookmark
+ * request, and on success renders <SavedToast /> which auto-closes the
+ * popup after 1.5s. No tag/note/list prompts, no confirmation forms —
+ * DeepSeek handles enrichment server-side.
+ *
+ * On error we keep the popup open and surface the message so the user
+ * can retry or reconfigure.
+ */
 export default function SavePage() {
   const api = useTRPC();
   const { settings, isPending: isSettingsLoaded } = usePluginSettings();
@@ -38,17 +46,13 @@ export default function SavePage() {
     undefined,
   );
 
-  const {
-    data,
-    mutate: createBookmark,
-    status,
-  } = useMutation(
+  const { mutate: createBookmark, status } = useMutation(
     api.bookmarks.createBookmark.mutationOptions({
       onError: (e) => {
         setError("Something went wrong: " + e.message);
       },
       onSuccess: async () => {
-        // After successful creation, update badge cache and notify background
+        // After successful creation, update badge cache and notify background.
         try {
           const [currentTab] = await chrome.tabs.query({
             active: true,
@@ -159,12 +163,13 @@ export default function SavePage() {
     });
   };
 
-  // Auto-save when settings are loaded and we have a pending bookmark
+  // Always auto-save — the manual-confirmation flow was removed with the
+  // mymind-style pivot. `settings.autoSave` is retained in storage for
+  // back-compat but no longer gates the save.
   useEffect(() => {
     if (
       hasCheckedRequest &&
       pendingBookmark &&
-      settings.autoSave &&
       status === "idle" &&
       !isCapturing &&
       !error
@@ -172,20 +177,7 @@ export default function SavePage() {
       saveBookmark(pendingBookmark);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    hasCheckedRequest,
-    pendingBookmark,
-    settings.autoSave,
-    status,
-    isCapturing,
-    error,
-  ]);
-
-  const handleManualSave = () => {
-    if (pendingBookmark) {
-      saveBookmark(pendingBookmark);
-    }
-  };
+  }, [hasCheckedRequest, pendingBookmark, status, isCapturing, error]);
 
   if (error) {
     return <div className="text-red-500">{error}</div>;
@@ -205,88 +197,13 @@ export default function SavePage() {
       return <div className="text-red-500">{error}</div>;
     }
     case "success": {
-      return <Navigate to={`/bookmark/${data.id}`} />;
+      return <SavedToast />;
     }
-    case "pending": {
-      return (
-        <div className="flex justify-between text-lg">
-          <span>Saving Bookmark </span>
-          <Spinner />
-        </div>
-      );
-    }
+    case "pending":
     case "idle": {
-      // Show confirmation UI when autoSave is disabled
-      if (!settings.autoSave && pendingBookmark && hasCheckedRequest) {
-        return (
-          <div className="flex flex-col gap-3">
-            <p className="text-lg font-medium">Save Bookmark?</p>
-            {pendingBookmark.type === BookmarkTypes.LINK && (
-              <div className="flex flex-col gap-2">
-                <label className="text-xs font-medium text-muted-foreground">
-                  Title
-                </label>
-                <Input
-                  value={pendingBookmark.title ?? ""}
-                  onChange={(e) =>
-                    setPendingBookmark((prev) =>
-                      prev ? { ...prev, title: e.target.value } : prev,
-                    )
-                  }
-                  placeholder="Untitled"
-                />
-                <p className="truncate text-xs text-muted-foreground">
-                  {pendingBookmark.url}
-                </p>
-              </div>
-            )}
-            {pendingBookmark.type === BookmarkTypes.TEXT && (
-              <p className="text-xs text-muted-foreground">
-                {pendingBookmark.text.length > 150
-                  ? `${pendingBookmark.text.substring(0, 150)}...`
-                  : pendingBookmark.text}
-              </p>
-            )}
-            {pendingBookmark.type === BookmarkTypes.ASSET && (
-              <div className="flex flex-col gap-2">
-                <label className="text-xs font-medium text-muted-foreground">
-                  Title
-                </label>
-                <Input
-                  value={pendingBookmark.title ?? ""}
-                  onChange={(e) =>
-                    setPendingBookmark((prev) =>
-                      prev ? { ...prev, title: e.target.value } : prev,
-                    )
-                  }
-                  placeholder={pendingBookmark.fileName ?? "Asset"}
-                />
-              </div>
-            )}
-            <div className="flex flex-col gap-2">
-              <label className="text-xs font-medium text-muted-foreground">
-                Notes
-              </label>
-              <Textarea
-                value={pendingBookmark.note ?? ""}
-                onChange={(e) =>
-                  setPendingBookmark((prev) =>
-                    prev ? { ...prev, note: e.target.value } : prev,
-                  )
-                }
-                placeholder="Add notes..."
-                className="h-20 resize-none"
-              />
-            </div>
-            <Button onClick={handleManualSave} className="w-full">
-              Save Bookmark
-            </Button>
-          </div>
-        );
-      }
       return (
         <div className="flex justify-between text-lg">
-          <span>Saving Bookmark </span>
+          <span>Saving </span>
           <Spinner />
         </div>
       );

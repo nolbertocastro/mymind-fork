@@ -1,1 +1,26 @@
 @import "@karakeep/tailwind-config/globals.css";
+
+/*
+ * Ambient save-confirmation progress bar.
+ * Drains left→right over the same duration as the popup auto-close (1500 ms),
+ * giving the user a subtle visual receipt that the popup is about to dismiss.
+ */
+@keyframes krystal-progress-drain {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+.krystal-progress-bar {
+  animation: krystal-progress-drain 1500ms linear forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .krystal-progress-bar {
+    animation: none;
+    transform: scaleX(0.5);
+  }
+}

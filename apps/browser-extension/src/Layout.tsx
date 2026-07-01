@@ -1,9 +1,17 @@
-import { Home, RefreshCw, Settings, X } from "lucide-react";
 import { Outlet, useNavigate } from "react-router-dom";
 
-import { Button } from "./components/ui/button";
 import usePluginSettings from "./utils/settings";
 
+/**
+ * Root layout for the popup save flow.
+ *
+ * Deliberately chrome-less — no header, no footer buttons. The popup is
+ * either in-flight (saving) or dismissing itself (SavedToast auto-closes
+ * in 1.5s), so surfacing Bookmarks/Settings/Close controls here just
+ * competes with the ambient confirmation. Settings live under
+ * /options (reachable via the extension's right-click Options menu) and
+ * the popup closes itself when done.
+ */
 export default function Layout() {
   const navigate = useNavigate();
   const { settings, isPending: isInit } = usePluginSettings();
@@ -17,37 +25,8 @@ export default function Layout() {
   }
 
   return (
-    <div className="flex flex-col space-y-2">
-      <div className="rounded-md bg-gray-100 p-4 dark:bg-gray-900">
-        <Outlet />
-      </div>
-      <hr />
-      <div className="flex justify-between space-x-3">
-        <div className="my-auto">
-          <a
-            className="flex gap-2 text-foreground"
-            target="_blank"
-            rel="noreferrer"
-            href={`${settings.address}/dashboard/bookmarks`}
-          >
-            <Home />
-            <span className="text-md my-auto">Bookmarks</span>
-          </a>
-        </div>
-        <div className="flex space-x-3">
-          {process.env.NODE_ENV == "development" && (
-            <Button onClick={() => navigate(0)}>
-              <RefreshCw className="w-4" />
-            </Button>
-          )}
-          <Button onClick={() => navigate("/options")}>
-            <Settings className="w-4" />
-          </Button>
-          <Button onClick={() => window.close()}>
-            <X className="w-4" />
-          </Button>
-        </div>
-      </div>
+    <div className="rounded-md bg-gray-100 p-4 dark:bg-gray-900">
+      <Outlet />
     </div>
   );
 }
