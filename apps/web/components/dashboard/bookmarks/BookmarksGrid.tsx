@@ -25,18 +25,19 @@ import type { ZBookmark } from "@karakeep/shared/types/bookmarks";
 import { useBookmarkListContext } from "@karakeep/shared-react/hooks/bookmark-list-context";
 
 import BookmarkCard from "./BookmarkCard";
+import BookmarkFormattedCreatedAt from "./BookmarkFormattedCreatedAt";
 import EditorCard from "./EditorCard";
 import UnknownCard from "./UnknownCard";
 
-// mymind-inspired artistic card styling.
-// Goal: soft, premium, gallery-grade cards with subtle lift, smooth motion,
-// and rounded corners that feel hand-curated rather than utilitarian.
+import { getBookmarkTitle } from "@karakeep/shared/utils/bookmarkUtils";
+
+// mymind card wrapper.
 //
-//   • No hard borders — use a very faint border + soft shadow that grows on hover.
-//   • More vertical breathing room between cards (mb-5 vs the upstream mb-4).
-//   • Rounded-2xl + overflow-hidden so internal media (images, summaries)
-//     respect the card silhouette.
-//   • transform-gpu + will-change-transform keeps the lift cheap on long grids.
+// Cards float on the background instead of using strokes. Separation comes
+// from a soft layered shadow (see `.mymind-card-shadow` in globals.css) that
+// deepens gently on hover. rounded-xl (12px) matches the mymind radius; the
+// grid gets generous vertical rhythm (mb-6) so each card feels curated rather
+// than packed. transform-gpu keeps the lift cheap on long grids.
 function StyledBookmarkCard({
   children,
   className,
@@ -48,13 +49,12 @@ function StyledBookmarkCard({
   return (
     <Slot
       className={cn(
-        "mb-5 overflow-hidden rounded-2xl bg-card",
-        "border border-border/40",
-        "shadow-[0_1px_2px_rgba(0,0,0,0.04)]",
-        "transition-[transform,box-shadow,border-color] duration-300 ease-out",
-        "hover:shadow-[0_12px_30px_-8px_rgba(0,0,0,0.18)]",
-        "hover:border-border/70",
+        "mb-6 overflow-hidden rounded-xl bg-card",
+        "mymind-card-shadow",
+        "transition-[transform,box-shadow] duration-300 ease-out",
         "hover:-translate-y-0.5",
+        "hover:shadow-[0_2px_4px_rgba(0,0,0,0.06),0_18px_36px_-12px_rgba(0,0,0,0.14)]",
+        "dark:hover:shadow-[0_2px_4px_rgba(0,0,0,0.5),0_18px_36px_-12px_rgba(0,0,0,0.6)]",
         "transform-gpu will-change-transform",
         className,
       )}
@@ -62,6 +62,28 @@ function StyledBookmarkCard({
     >
       {children}
     </Slot>
+  );
+}
+
+// mymind renders card metadata (title / date) as a small grey caption BELOW
+// the card silhouette, not inside it. The card itself stays chrome-free so
+// image, quote, or video content can dominate.
+function BelowCardCaption({ bookmark }: { bookmark: ZBookmark }) {
+  const layout = useBookmarkLayout();
+  if (layout === "list" || layout === "compact") return null;
+
+  const title = getBookmarkTitle(bookmark);
+  return (
+    <div className="mb-6 -mt-4 flex items-baseline gap-2 px-1 text-[11px] text-muted-foreground">
+      {title && (
+        <span className="line-clamp-1 flex-1 truncate" title={title}>
+          {title}
+        </span>
+      )}
+      <span suppressHydrationWarning className="shrink-0 tabular-nums opacity-70">
+        <BookmarkFormattedCreatedAt createdAt={bookmark.createdAt} />
+      </span>
+    </div>
   );
 }
 
@@ -78,14 +100,18 @@ const BookmarkGridItem = memo(function BookmarkGridItem({
 
   return (
     <ErrorBoundary fallback={<UnknownCard bookmark={bookmark} />}>
-      <StyledBookmarkCard
-        className={cn(
-          isFocused &&
-            "ring-2 ring-primary ring-offset-2 ring-offset-background",
-        )}
-      >
-        <BookmarkCard bookmark={bookmark} bookmarkIndex={index} />
-      </StyledBookmarkCard>
+      <div>
+        <StyledBookmarkCard
+          className={cn(
+            "mb-2", // shorter than default; caption below adds spacing
+            isFocused &&
+              "ring-2 ring-primary ring-offset-2 ring-offset-background",
+          )}
+        >
+          <BookmarkCard bookmark={bookmark} bookmarkIndex={index} />
+        </StyledBookmarkCard>
+        <BelowCardCaption bookmark={bookmark} />
+      </div>
     </ErrorBoundary>
   );
 });

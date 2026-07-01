@@ -54,6 +54,11 @@ interface Props {
   fitHeight?: boolean;
   wrapTags: boolean;
   bookmarkIndex?: number;
+  // mymind fork: aspect ratio for the image well in grid/masonry mode.
+  //   - "4/3"  — default, editorial photo silhouette for link/asset previews
+  //   - "auto" — no forced aspect; used when the "image" slot is actually a
+  //             self-sized visual like a quote card or note preview
+  imageAspect?: "4/3" | "auto";
 }
 
 function BottomRow({
@@ -348,12 +353,10 @@ function GridView({
   image,
   title,
   content,
-  footer,
   className,
   wrapTags,
-  layout,
-  fitHeight = false,
   bookmarkIndex,
+  imageAspect = "4/3",
 }: Props & { layout: BookmarksLayoutTypes }) {
   const { showNotes, showTags, showTitle, imageFit } =
     useBookmarkDisplaySettings();
@@ -362,18 +365,26 @@ function GridView({
     contain: "object-contain",
   });
   const note = showNotes ? bookmark.note?.trim() : undefined;
-  const img = image(
-    "grid",
-    cn("h-56 min-h-56 w-full rounded-t-lg", imgFitClass),
-  );
+  const hasContent = !!content;
+
+  // mymind fork:
+  //   • Image cards are edge-to-edge — no top-only radius, no fixed height,
+  //     no in-card title chrome (the outer card is already rounded via
+  //     StyledBookmarkCard's overflow-hidden; caption lives BELOW the card).
+  //   • Non-image cards (text, link previews, notes) still need a padded body
+  //     but no forced h-96; height flows with the content so masonry breathes.
+  //   • Title inside the card only shows when there's no external image —
+  //     that's the link-preview / note case.
+  const img = image("grid", cn("w-full", imgFitClass));
+  const hasImage = !!img;
 
   return (
     <div
       className={cn(
         // mymind fork: see ListView note for `group/card`.
-        "group group/card relative flex flex-col overflow-hidden rounded-lg",
+        "group group/card relative flex flex-col overflow-hidden",
+        // Edge-to-edge silhouette — outer wrapper handles rounded corners.
         className,
-        fitHeight && layout != "grid" ? "max-h-96" : "h-96",
       )}
       data-bookmark-index={bookmarkIndex}
     >
@@ -381,28 +392,53 @@ function GridView({
       <OwnerIndicator bookmark={bookmark} />
       <DragHandle bookmark={bookmark} className="left-2 top-2" />
       <HoverActionBar bookmark={bookmark} />
-      {img && <div className="h-56 w-full shrink-0 overflow-hidden">{img}</div>}
-      <div className="flex h-full flex-col justify-between gap-2 overflow-hidden p-2">
-        <div className="grow-1 flex flex-col gap-2 overflow-hidden">
-          {showTitle && title && (
-            <div className="line-clamp-2 flex-none shrink-0 overflow-hidden text-ellipsis break-words text-lg">
-              {title}
-            </div>
+      {hasImage && (
+        // Image wrapper. Default aspect-4/3 gives editorial photo silhouette
+        // for next/image `fill` previews; "auto" lets self-sized visuals (like
+        // the quote card) render at their intrinsic height.
+        <div
+          className={cn(
+            "relative w-full overflow-hidden",
+            imageAspect === "4/3" && "aspect-[4/3]",
           )}
-          {content && <div className="shrink-1 overflow-hidden">{content}</div>}
-          {note && <NotePreview note={note} bookmarkId={bookmark.id} />}
-          {showTags && (
-            <div className="flex shrink-0 flex-wrap gap-1 overflow-hidden">
-              <TagList
-                className={wrapTags ? undefined : "h-full"}
-                bookmark={bookmark}
-                loading={isBookmarkStillTagging(bookmark)}
-              />
-            </div>
-          )}
+        >
+          {img}
         </div>
-        <BottomRow footer={footer} bookmark={bookmark} />
-      </div>
+      )}
+      {/*
+       * When the image slot is a self-sized visual (imageAspect="auto", used
+       * by the quote / note treatments), that visual already IS the card
+       * body — don't render an extra content block underneath. Otherwise
+       * render title/content/tags in the padded chrome area beneath the image.
+       */}
+      {imageAspect !== "auto" &&
+        (hasContent ||
+          note ||
+          (showTags && !hasImage) ||
+          (showTitle && !hasImage && title)) && (
+          <div className="flex flex-col gap-2 overflow-hidden p-4">
+            {/* Only show title inside the card for non-image cards; image cards
+                rely on the BelowCardCaption for their title. */}
+            {showTitle && title && !hasImage && (
+              <div className="line-clamp-3 shrink-0 overflow-hidden text-ellipsis break-words font-serif text-xl italic leading-snug text-foreground">
+                {title}
+              </div>
+            )}
+            {content && (
+              <div className="shrink-1 overflow-hidden">{content}</div>
+            )}
+            {note && <NotePreview note={note} bookmarkId={bookmark.id} />}
+            {showTags && (
+              <div className="flex shrink-0 flex-wrap gap-1 overflow-hidden">
+                <TagList
+                  className={wrapTags ? undefined : "h-full"}
+                  bookmark={bookmark}
+                  loading={isBookmarkStillTagging(bookmark)}
+                />
+              </div>
+            )}
+          </div>
+        )}
     </div>
   );
 }
