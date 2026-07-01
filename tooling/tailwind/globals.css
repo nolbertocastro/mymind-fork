@@ -130,4 +130,17 @@
       0 1px 2px hsl(0 0% 0% / 0.4),
       0 8px 24px -12px hsl(0 0% 0% / 0.5);
   }
+
+  /*
+   * Krystal utility: hide the native scrollbar on horizontal scrollers
+   * (Top of Mind row, tag chip strips, etc). We keep pointer scrolling
+   * and touch scrolling functional; only the visible track is suppressed.
+   */
+  .krystal-hide-scrollbar {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE / old Edge */
+  }
+  .krystal-hide-scrollbar::-webkit-scrollbar {
+    display: none; /* WebKit */
+  }
 }

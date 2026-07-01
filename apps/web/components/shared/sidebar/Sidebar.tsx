@@ -7,12 +7,12 @@ import SidebarItem from "./SidebarItem";
 import SidebarVersion from "./SidebarVersion";
 import { TSidebarItem } from "./TSidebarItem";
 
-// mymind sidebar.
+// Krystal mobile-drawer sidebar.
 //
-// The visual identity is the rotated "my mind" wordmark at the top, in the
+// The visual identity is the rotated "Krystal" wordmark at the top, in the
 // editorial serif. Nav items are still available below it (Home, Tags,
 // Highlights, Archive, Lists) — those are the practical utilities that
-// Karakeep needs and mymind doesn't expose. We just make them feel calmer:
+// Karakeep needs. We keep them but style them to feel calmer:
 // no right border, tighter type, tighter spacing. The rotated wordmark is the
 // identity moment; everything below it is quiet UI.
 
@@ -28,10 +28,10 @@ export default async function Sidebar({
 
   return (
     <aside className="relative flex h-[calc(100vh-80px)] w-56 flex-col bg-background">
-      {/* Rotated "my mind" identity — sits along the left edge of the sidebar. */}
+      {/* Rotated "Krystal" identity — sits along the left edge of the drawer. */}
       <div className="pointer-events-none absolute left-3 top-2 select-none">
         <span className="block origin-top-left -rotate-90 translate-y-40 whitespace-nowrap font-serif text-2xl italic tracking-tight text-muted-foreground/60">
-          my mind
+          Krystal
         </span>
       </div>
 

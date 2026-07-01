@@ -20,16 +20,15 @@ import {
   Tag,
 } from "lucide-react";
 
-// mymind-style top navigation.
+// Krystal top navigation.
 //
 // The header carries the identity now that the sidebar is gone:
-//   - Left:    "my mind" serif italic wordmark (the brand mark)
-//   - Center:  editorial serif search hero ("Search my mind…")
+//   - Left:    "Krystal" serif italic wordmark (the brand mark — crystals
+//              of knowledge, K for knowledge)
+//   - Center:  editorial serif search hero ("Search Krystal…")
 //   - Right:   tab strip (Everything · Spaces) + overflow menu with the
 //              utility routes (Home, Tags, Highlights, Archive) that used
 //              to live in the sidebar.
-//
-// Serendipity has been removed per user preference.
 
 const TABS: { label: string; href: string }[] = [
   { label: "Everything", href: "/dashboard/bookmarks" },
@@ -75,7 +74,7 @@ export default async function Header() {
           "text-foreground/70 transition-colors hover:text-foreground",
         )}
       >
-        my mind
+        Krystal
       </Link>
 
       {/* Serif hero-styled search — placeholder becomes the visible headline. */}

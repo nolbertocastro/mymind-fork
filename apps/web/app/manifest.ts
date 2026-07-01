@@ -2,10 +2,10 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "mymind",
-    short_name: "mymind",
+    name: "Krystal",
+    short_name: "Krystal",
     description:
-      "Your personal archive. Save anything from anywhere — Claude takes care of the rest.",
+      "Your crystals of knowledge. Save anything from anywhere — Krystal takes care of the rest.",
     background_color: "#ffffff",
     theme_color: "#ffffff",
     start_url: "/",
@@ -47,14 +47,14 @@ export default function manifest(): MetadataRoute.Manifest {
         sizes: "3840x2307",
         type: "image/png",
         form_factor: "wide",
-        label: "mymind desktop archive",
+        label: "Krystal desktop archive",
       },
       {
         src: "/screenshots/mobile.png",
         sizes: "692x1498",
         type: "image/png",
         form_factor: "narrow",
-        label: "mymind mobile archive",
+        label: "Krystal mobile archive",
       },
     ],
   };

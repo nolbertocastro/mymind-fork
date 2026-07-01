@@ -25,6 +25,7 @@ import type { ZBookmark } from "@karakeep/shared/types/bookmarks";
 import { useBookmarkListContext } from "@karakeep/shared-react/hooks/bookmark-list-context";
 
 import BookmarkCard from "./BookmarkCard";
+import { BookmarkContextMenuTrigger } from "./BookmarkContextMenu";
 import BookmarkFormattedCreatedAt from "./BookmarkFormattedCreatedAt";
 import EditorCard from "./EditorCard";
 import UnknownCard from "./UnknownCard";
@@ -100,18 +101,21 @@ const BookmarkGridItem = memo(function BookmarkGridItem({
 
   return (
     <ErrorBoundary fallback={<UnknownCard bookmark={bookmark} />}>
-      <div>
+      <BookmarkContextMenuTrigger bookmark={bookmark}>
         <StyledBookmarkCard
           className={cn(
             "mb-2", // shorter than default; caption below adds spacing
             isFocused &&
               "ring-2 ring-primary ring-offset-2 ring-offset-background",
+            // Subtle amber halo when a card is pinned Top of Mind.
+            bookmark.favourited &&
+              "ring-1 ring-primary/40 ring-offset-1 ring-offset-background",
           )}
         >
           <BookmarkCard bookmark={bookmark} bookmarkIndex={index} />
         </StyledBookmarkCard>
         <BelowCardCaption bookmark={bookmark} />
-      </div>
+      </BookmarkContextMenuTrigger>
     </ErrorBoundary>
   );
 });

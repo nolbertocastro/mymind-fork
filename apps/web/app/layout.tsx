@@ -15,9 +15,10 @@ import { Toaster } from "sonner";
 
 import { clientConfig } from "@karakeep/shared/config";
 
-// mymind aesthetic fonts.
-// Instrument Serif = editorial hero display, closest free match to Editorial New
-// / Cardinal used by mymind. JetBrains Mono for note-card typewriter feel.
+// Krystal typography.
+// Instrument Serif = editorial hero display (a free Editorial New / Cardinal
+// stand-in, chosen for the mymind-inspired feel). JetBrains Mono is used for
+// note-card typewriter texture.
 const inter = Inter({
   subsets: ["latin"],
   fallback: ["sans-serif"],
@@ -40,13 +41,13 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "mymind",
-  applicationName: "mymind",
+  title: "Krystal",
+  applicationName: "Krystal",
   description:
-    "Your personal archive. Save anything from anywhere — Claude takes care of the rest.",
+    "Your crystals of knowledge. Save anything from anywhere \u2014 Krystal takes care of the rest.",
   appleWebApp: {
     capable: true,
-    title: "mymind",
+    title: "Krystal",
   },
   formatDetection: {
     telephone: false,
