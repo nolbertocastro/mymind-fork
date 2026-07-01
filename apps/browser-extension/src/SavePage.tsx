@@ -9,7 +9,6 @@ import {
 
 import { NEW_BOOKMARK_REQUEST_KEY_NAME } from "./background/protocol";
 import SavedToast from "./SavedToast";
-import Spinner from "./Spinner";
 import { hasHostPermission } from "./utils/permissions";
 import usePluginSettings from "./utils/settings";
 import {
@@ -180,33 +179,16 @@ export default function SavePage() {
   }, [hasCheckedRequest, pendingBookmark, status, isCapturing, error]);
 
   if (error) {
-    return <div className="text-red-500">{error}</div>;
+    return <div className="p-4 text-red-500">{error}</div>;
   }
 
-  if (isCapturing) {
-    return (
-      <div className="flex justify-between text-lg">
-        <span>Capturing Page </span>
-        <Spinner />
-      </div>
-    );
+  // All in-flight states (capturing, idle-before-mutation, mutating) show
+  // the mymind "One moment" card. On success we swap the copy to "Saved"
+  // and the toast auto-closes the popup. On error we fall through to the
+  // block above.
+  if (status === "error") {
+    return <div className="p-4 text-red-500">{error}</div>;
   }
 
-  switch (status) {
-    case "error": {
-      return <div className="text-red-500">{error}</div>;
-    }
-    case "success": {
-      return <SavedToast />;
-    }
-    case "pending":
-    case "idle": {
-      return (
-        <div className="flex justify-between text-lg">
-          <span>Saving </span>
-          <Spinner />
-        </div>
-      );
-    }
-  }
+  return <SavedToast saved={status === "success"} />;
 }

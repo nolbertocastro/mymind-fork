@@ -1,36 +1,50 @@
 import { useEffect } from "react";
 
-import Logo from "./Logo";
-
 /**
  * Ambient save confirmation, mymind-style.
  *
- * Shows a thin progress bar that drains over 1.5s, then closes the popup.
- * No actions, no undo, no bookmark title — the save happens silently,
- * the confirmation appears calmly, and the popup dismisses itself.
+ * Renders a dark card with a subtle gradient border, a slowly-pulsing
+ * ellipse mark, and centered muted-white body copy. During the save
+ * request we show "One moment. I'm saving this for you." — once the
+ * bookmark resolves we swap to "Saved to Krystal." and let the popup
+ * dismiss itself after AUTO_CLOSE_MS.
  *
- * All post-save enrichment (tags, notes, lists) is handled server-side —
- * DeepSeek auto-tags via the inference worker, so the extension has
- * nothing to prompt the user for.
+ * No wordmark, no logo, no progress bar, no buttons — the pulsing
+ * mark IS the receipt.
  */
-const AUTO_CLOSE_MS = 1500;
+const AUTO_CLOSE_MS = 2500;
 
-export default function SavedToast() {
+interface SavedToastProps {
+  /** When true, this is the post-save confirmation and the popup will auto-close. */
+  saved?: boolean;
+}
+
+export default function SavedToast({ saved = false }: SavedToastProps) {
   useEffect(() => {
+    if (!saved) return;
     const t = setTimeout(() => {
       window.close();
     }, AUTO_CLOSE_MS);
     return () => clearTimeout(t);
-  }, []);
+  }, [saved]);
 
   return (
-    <div className="krystal-saved-toast relative flex flex-col items-center justify-center gap-4 py-6">
-      <div
-        aria-hidden
-        className="krystal-progress-bar absolute left-0 right-0 top-0 h-[3px] origin-left bg-primary"
-      />
-      <Logo />
-      <p className="text-lg text-foreground">Saved to Krystal</p>
+    <div className="krystal-toast-shell">
+      <div className="krystal-toast-card">
+        <div
+          className="krystal-toast-ellipse"
+          aria-hidden
+        />
+        {saved ? (
+          <p className="krystal-toast-copy">Saved to Krystal.</p>
+        ) : (
+          <p className="krystal-toast-copy">
+            One moment.
+            <br />
+            I&rsquo;m saving this for you.
+          </p>
+        )}
+      </div>
     </div>
   );
 }
